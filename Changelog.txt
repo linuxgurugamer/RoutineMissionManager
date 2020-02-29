@@ -1,0 +1,63 @@
+ChangeLog
+
+0.0.4.0
+	Adoption by Linuxgurugamer
+	Note:  Latest code was included in the release, but was not updated on Github
+	Updated for KSP 1.8
+	Created Changelog file from release history on Spacedock
+	Added support for ClickThroughBlocker
+	Updated button graphic
+	Replaced stock toolbar code with ToolbarController
+	Added alternate skin
+	Added settings page
+	Improved layout of various screens by merging lines as appropriate, not having only one item (label or data) per line
+	Fixed some typos in variable names
+	Added some spacing to manual
+
+
+Version 032 Released on 2018-04-07
+	revised version of routine mission manager
+	--improved UI
+	--in game manual
+	--detailed information of tracked missions
+	--ordering forms gives more info on the to be ordered mission and gives feedback on any not met requirements.
+	--overview of all ordered missions
+	-no longer nessecary to be away from a destination station for a mission to complete. (this comes at the cost of missions no longer completing when there is other traffic in the area of the destination)
+	-support for missions which have reusable stages which return for kerbin for recovery.
+	Example: a rocket with reusable boosters which parachute down to be recovered. Make sure each booster has a command part, like a probe core. Save the game before launch. Launch the rocket. Seperate the boosters when depleted and immediatly create another savegame. Fly the rocket on to it's destination. Jump back to the seperation savegame and switch vessel to one of the boosters. "Fly" the booster safely to the surface, repeat the same procedure for the other boosters. Jump back to the savegame before launch. Even though the rocket and boosters when tracked to their destination in different timelines the mod will combine the tracked information as if it was one mission.
+
+Version 027 Released on 2017-10-08
+	-fixed bug where mission duration of repeat missions would increase after the mission has been reordered. Thanks to Duke Leto reporting this.
+
+Version 026 Released on 2017-07-08
+	-changed logic which materializes and places ordered vessel for docking, to await the docking event to occur before processing the next ordered vessel, in case multiple mission have arrived since now. Before multiple ordered vessels would be processed sequentially nut only up until positioning the vessel for docking. If docking was slow after positioning there could be situations where multiple ships are docking at the same time, which could be the cause of reported kraken issues reported for these situations. -added functionality to define the custom home planet the mod uses. This allows the mod to work modded versions of the game where this is not Kerbin.
+
+Version 025 Released on 2017-06-11
+	-compiled for 1.3
+
+Version 024 Released on 2017-04-12
+	-reimplemented tourist support
+
+Version 023 Released on 2016-12-31
+	-disabled tourism again, the functionality gives errors which for the moment have not been solve. -updated for 1.2.2
+
+Version 022 Released on 2016-12-04
+	-support for tourism contracts is again implemented
+
+Version 021 Released on 2016-11-06
+	-adapted for 1.2 -support for contracts has been removed for the moment
+
+Version 020 Released on 2016-07-17
+	-made directory path logic more os indepent -compiled against KSP version 1.1.3
+
+Version 019 Released on 2016-05-30
+	-fixed bug where unmanned probes could not start tracking on launchpad -possible fix for issues using mod on mac
+
+Version 018 Released on 2016-05-28
+	-fixes gamebreaking bug in sandbox and science mode
+
+Version 017 Released on 2016-05-01
+	-adapted for version 1.1
+
+Version 016 Released on 2016-03-06
+	No changelog provided

@@ -1,4 +1,0 @@
-c:\KSP\ksp mod\KSP_win\GameData\CommercialOfferings\CommercialOfferings.dll
-c:\users\flip\documents\visual studio 2012\Projects\CommercialOfferings\CommercialOfferings\obj\Release\CommercialOfferings.csprojResolveAssemblyReference.cache
-c:\users\flip\documents\visual studio 2012\Projects\CommercialOfferings\CommercialOfferings\obj\Release\CommercialOfferings.dll
-C:\KSP\ksp-mod-0-25-0\KSP_win\GameData\RoutineMissionManager\CommercialOfferings.dll
