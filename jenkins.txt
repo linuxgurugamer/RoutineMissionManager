@@ -35,8 +35,8 @@
 
 # 3:SOURCEFILE, DESTDIR
 3:RoutineMissionManager.version,GameData/RoutineMissionManager
-3:License.md,GameData/KerbalHotSeat
-3:README.md,GameData/KerbalHotSeat
+3:License.md,GameData/RoutineMissionManager
+3:README.md,GameData/RoutineMissionManager
 
 
 #
