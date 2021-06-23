@@ -1,5 +1,6 @@
 ﻿using CommercialOfferings.MissionData;
 using System;
+using KSP.Localization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -84,7 +85,7 @@ namespace CommercialOfferings.Gui
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Vessel:", RmmStyle.Instance.LabelStyle, GUILayout.Width(labelWidth));
-                    GUILayout.Label(launch.VesselName.ToString(), RmmStyle.Instance.LabelStyle, GUILayout.Width(labelWidth));
+                    GUILayout.Label(Localizer.Format(launch.VesselName), RmmStyle.Instance.LabelStyle, GUILayout.Width(labelWidth));
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Value:", RmmStyle.Instance.LabelStyle, GUILayout.Width(labelWidth));

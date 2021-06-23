@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -54,7 +55,7 @@ namespace CommercialOfferings.Gui
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Vessel:", RmmStyle.Instance.LabelStyle, GUILayout.Width(100));
-                GUILayout.Label(VesselName, RmmStyle.Instance.LabelStyle, GUILayout.Width(200));
+                GUILayout.Label(Localizer.Format(VesselName), RmmStyle.Instance.LabelStyle, GUILayout.Width(200));
                 GUILayout.EndHorizontal();
             }
 

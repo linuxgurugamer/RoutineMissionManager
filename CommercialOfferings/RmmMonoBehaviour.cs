@@ -35,6 +35,7 @@ using KSP.UI.Screens;
 using CommercialOfferings.Gui;
 using ClickThroughFix;
 using ToolbarControl_NS;
+using SpaceTuxUtility;
 
 namespace CommercialOfferings
 {
@@ -56,7 +57,7 @@ namespace CommercialOfferings
         private TrackingControl _trackingControl = new TrackingControl();
         private RoutineControl _routineControl = new RoutineControl();
 
-        
+
 
         //stock toolbar button
         //private ApplicationLauncherButton toolBarButton;
@@ -70,14 +71,15 @@ namespace CommercialOfferings
 
         //GUI
 
+#if false
         //GUI Location
         private bool renderGUILocation = false;
-        private Rect windowPosGUILocation = new Rect(450, 200, 350, 30);
+       private Rect windowPosGUILocation = new Rect(450, 200, 350, 30);
         private Vector2 scrollPositionModules;
         private RMMModule rmmmSelectGUI = null;
-
+#endif
         //GUI TermsCondi
-        private bool renderGUITermsCondi = false;
+        //private bool renderGUITermsCondi = false;
         private Rect windowPosGUITermsCondi = new Rect(400, 250, 250, 300);
         private Vector2 scrollPositionDisc;
 
@@ -87,9 +89,11 @@ namespace CommercialOfferings
 
         public void Awake()
         {
+#if false
             renderGUILocation = false;
-            renderGUITermsCondi = false;
-			addToolbarButton();
+#endif
+            //renderGUITermsCondi = false;
+            addToolbarButton();
         }
 
         void onDestroy()
@@ -107,12 +111,13 @@ namespace CommercialOfferings
 
         private void OnGUI()
         {
-            if(Instance == null) { Instance = this; }
+            if (Instance == null) { Instance = this; }
+#if false
             if (Event.current.type == EventType.Repaint || Event.current.isMouse)
             {
                 // preDraw code
             }
-
+#endif
             OnUpdate();
             _windowManager.OnGUI();
             _trackingControl.OnUpdate();
@@ -194,15 +199,20 @@ namespace CommercialOfferings
                  RmmUtil.HasDockingPorts(FlightGlobals.ActiveVessel)) ||
                 RmmUtil.IsTrackingActive(FlightGlobals.ActiveVessel))
                 return (true);
-            
+
             return (false);
         }
-        
+
+#if false
         private void startRoutine()
         {
-            if (!File.Exists(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "UserAcknowledgesKnownBugs")) { openGUITermsCondi(); return; }
+            if (!File.Exists(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "UserAcknowledgesKnownBugs")) 
+            { 
+                openGUITermsCondi(); 
+                return; 
+            }
         }
-
+#endif
         public void CreateDepartureTracking(Part dockingPort)
         {
             _trackingControl.CreateDepartureTracking(dockingPort);
@@ -235,40 +245,44 @@ namespace CommercialOfferings
 
             GUILayout.BeginVertical();
 
-            scrollPositionDisc = GUILayout.BeginScrollView(scrollPositionDisc, false, true, GUIStyle.none, RmmStyle.Instance.VertiScrollBarStyle , GUILayout.Width(240), GUILayout.Height(300));
+            scrollPositionDisc = GUILayout.BeginScrollView(scrollPositionDisc, false, true, GUIStyle.none, RmmStyle.Instance.VertiScrollBarStyle, GUILayout.Width(240), GUILayout.Height(300));
 
-            GUILayout.Label( 
+            GUILayout.Label(
             "Our scientist have discovered docking ports are in fact very round in nature. This new-found knowledge explains why ships can dock in so many different ways to a docking port. In practice ships have been seen to dock straight, canted slightly to the left, a full quarter to the right and even almost upside down with a two degree counterclockwise offset." + Environment.NewLine +
             "Based on these observations some theoretical scientist have argued there could be infinite many ways to connect two docking ports." + Environment.NewLine +
             "But all this metaphysical nonsense aside, docking is already super hard on our Kerbonauts. They can't be expected to align two docking ports together and also control the relative rotation of the approach. That's like totally doing two things at the same time!" + Environment.NewLine +
             Environment.NewLine +
-            "So when you order a mission to be executed unsupervised through the Routine Mission Manager, you should make sure every possible rotation between the current target docking port and the mission vessel does not lead to a collision between parts of the station and the approaching vessel. If you can not make sure of this you should not order this mission in combination with this docking port."            
-            ,RmmStyle.Instance.LabelTextStyle,GUILayout.Width(205));
+            "So when you order a mission to be executed unsupervised through the Routine Mission Manager, you should make sure every possible rotation between the current target docking port and the mission vessel does not lead to a collision between parts of the station and the approaching vessel. If you can not make sure of this you should not order this mission in combination with this docking port."
+            , RmmStyle.Instance.LabelTextStyle, GUILayout.Width(205));
 
             if (GUILayout.Button("I understand and acknowledge", RmmStyle.Instance.ButtonStyle, GUILayout.Height(30)))
             {
                 System.IO.File.Create(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "UserAcknowledgesKnownBugs");
-                closeGUITermsCondi();
+                //closeGUITermsCondi();
             }
             GUILayout.EndScrollView();
 
             GUILayout.EndVertical();
         }
 
+        private static int winPosGUITermsCondiID = WindowHelper.NextWindowId("windowPosGUITermsCondi");
         private void drawGUITermsCondi()
         {
-            windowPosGUITermsCondi = ClickThruBlocker.GUILayoutWindow(3409, windowPosGUITermsCondi, WindowGUITermsCondi, "New science breakthrough!", RmmStyle.Instance.WindowStyle);
+            windowPosGUITermsCondi = ClickThruBlocker.GUILayoutWindow(winPosGUITermsCondiID, windowPosGUITermsCondi, WindowGUITermsCondi, "New science breakthrough!", RmmStyle.Instance.WindowStyle);
         }
 
+#if false
         public void openGUITermsCondi()
         {
-            renderGUITermsCondi = true;
+            //renderGUITermsCondi = true;
         }
 
         public void closeGUITermsCondi()
         {
-            renderGUITermsCondi = false;
+            //renderGUITermsCondi = false;
         }
+
+#endif
 
         internal void OnDestroy()
         {
@@ -293,7 +307,7 @@ namespace CommercialOfferings
             _nextLogicTime = Planetarium.GetUniversalTime() + 1;
         }
 
-        #region Menu
+#region Menu
 
         private MenuWindow _menuWindow = null;
 
@@ -401,9 +415,9 @@ namespace CommercialOfferings
             Manual();
         }
 
-        #endregion Menu
+#endregion Menu
 
-        #region Manual
+#region Manual
 
         private ManualWindow _manualWindow = null;
 
@@ -433,6 +447,6 @@ namespace CommercialOfferings
             WindowManager.Open(_manualWindow);
         }
 
-        #endregion Manual
+#endregion Manual
     }
 }

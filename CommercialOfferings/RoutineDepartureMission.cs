@@ -1,4 +1,5 @@
 ﻿using CommercialOfferings.MissionData;
+using KSP.Localization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace CommercialOfferings
 
         public string VesselName
         {
-            get { return _mission.Departure.VesselName; }
+            get { return Localizer.Format(_mission.Departure.VesselName); }
         }
 
         public string Body

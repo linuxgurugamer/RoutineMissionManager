@@ -34,6 +34,8 @@ using UnityEngine;
 using KSP.UI.Screens;
 using Contracts;
 using CommercialOfferings.MissionData;
+using SpaceTuxUtility;
+using ClickThroughFix;
 
 namespace CommercialOfferings
 {
@@ -84,7 +86,7 @@ namespace CommercialOfferings
         public bool OrderingEnabled = true;
 
         //GUI Main
-        private bool renderGUIMain = false;
+        //private bool renderGUIMain = false;
         private static Rect windowPosGUIMain = new Rect(200, 200, 200, 450);
         private Vector2 scrollPositionAvailableCommercialOfferings;
         public float windowGUIMainX = 1;
@@ -94,12 +96,12 @@ namespace CommercialOfferings
         Mission selectedOffering = new Mission();
 
         //GUI Offering
-        private bool renderGUIOffering = false;
+        //private bool renderGUIOffering = false;
         private static Rect windowPosGUIOffering = new Rect(300, 100, 100, 100);
         Mission GUIOffering = new Mission();
 
         //GUI Order
-        private bool renderGUIMission = false;
+        //private bool renderGUIMission = false;
         private static Rect windowPosGUIMission = new Rect(500, 400, 300, 75);
         Mission GUIMission = new Mission();
         private int intCrewCount = 0;
@@ -107,14 +109,14 @@ namespace CommercialOfferings
         //private string strGUIerrmess = "";
 
         //GUI Pref Crew
-        private bool renderGUIPrefCrew = false;
+        //private bool renderGUIPrefCrew = false;
         private static Rect windowPosGUIPrefCrew = new Rect(700, 200, 200, 600);
         List<ProtoCrewMember> preferredCrewList = new List<ProtoCrewMember>();
         private Vector2 scrollPositionPreferredCrew;
         private Vector2 scrollPositionAvailableCrew;
 
         //GUI Register Port
-        private bool renderGUIRegister = false;
+        //private bool renderGUIRegister = false;
         private static Rect windowPosGUIRegister = new Rect(300, 300, 240, 100);
         public string StrPortCode = "";
 
@@ -1217,25 +1219,27 @@ namespace CommercialOfferings
             openGUIMain();
         }
 
+        private static int windowPosGUIMainID = WindowHelper.NextWindowId("windowPosGUIMain");
+
         private void drawGUIMain()
         {
             windowPosGUIMain.xMin = windowGUIMainX;
             windowPosGUIMain.yMin = windowGUIMainY;
             windowPosGUIMain.width = windowGUIMainWidth;
             windowPosGUIMain.height = 450;
-            windowPosGUIMain = GUILayout.Window(3404, windowPosGUIMain, WindowGUIMain, "Docking Port " + PortCode, RmmStyle.Instance.WindowStyle);
+            windowPosGUIMain = ClickThruBlocker.GUILayoutWindow(windowPosGUIMainID, windowPosGUIMain, WindowGUIMain, "Docking Port " + PortCode, RmmStyle.Instance.WindowStyle);
         }
 
         public void openGUIMain()
         {
             loadOfferings();
 
-            renderGUIMain = true;
+            //renderGUIMain = true;
         }
 
         public void closeGUIMain()
         {
-            renderGUIMain = false;
+            //renderGUIMain = false;
         }
 
         public void loadOfferings()
@@ -1436,7 +1440,7 @@ namespace CommercialOfferings
                     if (!missionUnderway)
                     {
                         GUIMission = GUIOffering;
-                        openGUIMission();
+                        //openGUIMission();
                     }
                 }
             }
@@ -1449,22 +1453,24 @@ namespace CommercialOfferings
             GUILayout.EndVertical();
         }
 
+        private static int windowPosGUIOfferingID = WindowHelper.NextWindowId("windowPosGUIOffering");
+
         private void drawGUIOffering()
         {
-            windowPosGUIOffering = GUILayout.Window(3414, windowPosGUIOffering, WindowGUIOffering, GUIOffering.Name, RmmStyle.Instance.WindowStyle);
+            windowPosGUIOffering = ClickThruBlocker.GUILayoutWindow(windowPosGUIOfferingID, windowPosGUIOffering, WindowGUIOffering, GUIOffering.Name, RmmStyle.Instance.WindowStyle);
         }
 
         public void openGUIOffering()
         {
             print(GUIOffering.Name + " in folder: " + GUIOffering.FolderPath);
-            renderGUIOffering = true;
+            //renderGUIOffering = true;
         }
 
         public void closeGUIOffering()
         {
-            renderGUIOffering = false;
-            renderGUIMission = false;
-            renderGUIPrefCrew = false;
+            //renderGUIOffering = false;
+            //renderGUIMission = false;
+            //renderGUIPrefCrew = false;
         }
 
         /// <summary>
@@ -1517,17 +1523,20 @@ namespace CommercialOfferings
             }
             if (GUILayout.Button("Close", RmmStyle.Instance.ButtonStyle, GUILayout.Width(300), GUILayout.Height(22)))
             {
-                closeGUIMission();
+                //closeGUIMission();
             }
 
             GUILayout.EndVertical();
         }
 
+        private static int windowPosGUIMissionID = WindowHelper.NextWindowId("windowPosGUIMission");
+
         private void drawGUIMission()
         {
-            windowPosGUIMission = GUILayout.Window(3444, windowPosGUIMission, WindowGUIMission, "Mission", RmmStyle.Instance.WindowStyle);
+            windowPosGUIMission = ClickThruBlocker.GUILayoutWindow(windowPosGUIMissionID, windowPosGUIMission, WindowGUIMission, "Mission", RmmStyle.Instance.WindowStyle);
         }
 
+#if false
         public void openGUIMission()
         {
             renderGUIMission = true;
@@ -1538,7 +1547,7 @@ namespace CommercialOfferings
             renderGUIMission = false;
             renderGUIPrefCrew = false;
         }
-
+#endif
         public void procureOffering(Mission Off,bool repeat)
         {
             if (missionUnderway == true) { ScreenMessages.PostScreenMessage("already a mission underway", 4, ScreenMessageStyle.UPPER_CENTER); return; }
@@ -1660,9 +1669,11 @@ namespace CommercialOfferings
             GUILayout.EndVertical();
         }
 
+        private static int windowPosGUIPrefCrewID = WindowHelper.NextWindowId("windowPosGUIPrefCrew");
+
         private void drawGUIPrefCrew()
         {
-            windowPosGUIPrefCrew = GUILayout.Window(3447, windowPosGUIPrefCrew, WindowGUIPrefCrew, "Crew", RmmStyle.Instance.WindowStyle);
+            windowPosGUIPrefCrew = ClickThruBlocker.GUILayoutWindow(windowPosGUIPrefCrewID, windowPosGUIPrefCrew, WindowGUIPrefCrew, "Crew", RmmStyle.Instance.WindowStyle);
         }
 
         public void openGUIPrefCrew()
@@ -1681,12 +1692,12 @@ namespace CommercialOfferings
                     if (name == to.name) { preferredCrewList.Add(to); }
                 }
             }
-            renderGUIPrefCrew = true;
+            //renderGUIPrefCrew = true;
         }
 
         public void closeGUIPrefCrew()
         {
-            renderGUIPrefCrew = false;
+            //renderGUIPrefCrew = false;
         }
 
 
@@ -1912,19 +1923,21 @@ namespace CommercialOfferings
             GUILayout.EndHorizontal();
         }
 
+        private static int windowPosGUIRegisterID = WindowHelper.NextWindowId("windowPosGUIRegister");
+
         private void drawGUIRegister()
         {
-            windowPosGUIRegister = GUI.Window(157, windowPosGUIRegister, WindowGUIRegister, "Register", RmmStyle.Instance.WindowStyle);
+            windowPosGUIRegister = ClickThruBlocker.GUIWindow(windowPosGUIRegisterID, windowPosGUIRegister, WindowGUIRegister, "Register", RmmStyle.Instance.WindowStyle);
         }
 
         public void openGUIRegister()
         {
-            renderGUIRegister = true;
+            //renderGUIRegister = true;
         }
 
         public void closeGUIRegister()
         {
-            renderGUIRegister = false;
+            //renderGUIRegister = false;
         }
     }
 }

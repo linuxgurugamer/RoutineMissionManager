@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using System.Linq;
 using System.Text;
 
@@ -138,7 +139,7 @@ namespace CommercialOfferings.Worker
             _departureVessel.Unload();
             _departureVessel.Die();
 
-            ScreenMessages.PostScreenMessage(_mission.VesselName + " returned to " + RmmUtil.HomeBodyName(), 4, ScreenMessageStyle.UPPER_CENTER);
+            ScreenMessages.PostScreenMessage(Localizer.Format(_mission.VesselName) + " returned to " + RmmUtil.HomeBodyName(), 4, ScreenMessageStyle.UPPER_CENTER);
             finishDeparture();
         }
     

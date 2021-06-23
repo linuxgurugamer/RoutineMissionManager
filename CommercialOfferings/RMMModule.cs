@@ -80,6 +80,7 @@ namespace CommercialOfferings
             }
         }
 
+#if false
         private void OnGUI()
         {
             if (Event.current.type == EventType.Repaint || Event.current.isMouse)
@@ -87,5 +88,6 @@ namespace CommercialOfferings
                 // preDraw code
             }
         }
+#endif
     }
 }

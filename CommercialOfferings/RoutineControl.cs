@@ -11,7 +11,7 @@ namespace CommercialOfferings
 {
     class RoutineControl
     {
-        private RoutineWindow _routineWindow = null;
+        //private RoutineWindow _routineWindow = null;
 
         private double _nextLogicTime = 1;
 

@@ -27,11 +27,14 @@ OF SUCH DAMAGE.*/
 //Namespace Declaration 
 using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 using CommercialOfferings.MissionData;
+using SpaceTuxUtility;
+using ClickThroughFix;
 
 namespace CommercialOfferings
 {
@@ -229,7 +232,7 @@ namespace CommercialOfferings
 
         public string VesselName
         {
-            get { return vessel?.vesselName ?? ""; }
+            get { return Localizer.Format(vessel?.vesselName ?? ""); }
         }
 
         public string Status
@@ -1028,9 +1031,11 @@ namespace CommercialOfferings
             return ((float)price);
         }
 
+        private static int windowPosGUITrackingID = WindowHelper.NextWindowId("windowPosGUITracking");
+
         public void drawGUITracking()
         {
-            windowPosGUITracking = GUILayout.Window(3406, windowPosGUITracking, WindowGUITracking, "Mission Tracking", RmmStyle.Instance.WindowStyle);
+            windowPosGUITracking = ClickThruBlocker.GUILayoutWindow(windowPosGUITrackingID, windowPosGUITracking, WindowGUITracking, "Mission Tracking", RmmStyle.Instance.WindowStyle);
         }
 
         public void trackingEvent()

@@ -1,5 +1,10 @@
 ChangeLog
 
+0.0.4.1
+	Added missing Localizer calls for vessel name (for stock vessels which use localization)
+	Added ClickThroughBlocker support to all windows
+	Added dynamic window ids to all windows
+
 0.0.4.0
 	Adoption by Linuxgurugamer
 	Note:  Latest code was included in the release, but was not updated on Github

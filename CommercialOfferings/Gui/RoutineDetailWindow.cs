@@ -10,7 +10,7 @@ namespace CommercialOfferings.Gui
     {
         RoutineControl _routineControl = null;
 
-        private Vector2 scrollPosition;
+        //private Vector2 scrollPosition;
 
         public RoutineArrivalMission RoutineArrivalMission = null;
 

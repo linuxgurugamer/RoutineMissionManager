@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using SpaceTuxUtility;
 
 namespace CommercialOfferings.Gui
 {
@@ -30,6 +31,7 @@ namespace CommercialOfferings.Gui
 
         public void OpenWindow(IWindow window, IWindow parent = null)
         {
+           
             window.Id = GetNewId();
             window.Manager = this;
             window.ChildWindows = new List<IWindow>();

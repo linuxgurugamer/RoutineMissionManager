@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using ClickThroughFix;
+using SpaceTuxUtility;
 
 namespace CommercialOfferings.Gui
 {
@@ -16,6 +17,7 @@ namespace CommercialOfferings.Gui
         private Rect _windowPosition;
         private int _width;
         private int _height;
+        private int IdCommercialOfferings;
 
         public WindowBase(string title, Rect rect, int width, int height = 0)
         {
@@ -23,6 +25,7 @@ namespace CommercialOfferings.Gui
             _width = width;
             _height = height;
             _windowPosition = rect;
+            IdCommercialOfferings = WindowHelper.NextWindowId(title);
         }
 
         public virtual void Close()
@@ -33,8 +36,8 @@ namespace CommercialOfferings.Gui
         private void drawWindow()
         {
             if (!HighLogic.CurrentGame.Parameters.CustomParams<RMM>().useAlternateSkin)
-            GUI.skin = HighLogic.Skin;
-            _windowPosition = ClickThruBlocker.GUILayoutWindow(Id, _windowPosition, Window, Title, RmmStyle.Instance.WindowStyle);
+                GUI.skin = HighLogic.Skin;
+            _windowPosition = ClickThruBlocker.GUILayoutWindow(IdCommercialOfferings, _windowPosition, Window, Title, RmmStyle.Instance.WindowStyle);
         }
 
         public virtual void ChildWindowOnGUI()

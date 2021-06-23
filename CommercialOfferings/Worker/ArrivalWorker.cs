@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using System.IO;
 using System.Linq;
 using System.Text;
