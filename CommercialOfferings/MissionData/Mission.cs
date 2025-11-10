@@ -389,14 +389,17 @@ namespace CommercialOfferings.MissionData
             return resultNode;
         }
 
-
+        internal static string MissionsDirectory => RmmUtil.GamePath + Path.DirectorySeparatorChar + "GameData";
 
         public static List<Mission> LoadMissions()
         {
+            return LoadMissionsFrom(MissionsDirectory);
+        }
+
+        internal static List<Mission> LoadMissionsFrom(string directory)
+        {
             List<Mission> missions = new List<Mission>();
-
-            LoadMissionsDirectory(RmmUtil.GamePath + Path.DirectorySeparatorChar + "GameData", ref missions);
-
+            LoadMissionsDirectory(directory, ref missions);
             return missions;
         }
 

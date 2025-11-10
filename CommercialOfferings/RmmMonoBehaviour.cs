@@ -94,6 +94,8 @@ namespace CommercialOfferings
 #endif
             //renderGUITermsCondi = false;
             addToolbarButton();
+
+            _routineControl.OnAwake();
         }
 
         void onDestroy()

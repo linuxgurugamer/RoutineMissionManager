@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CommercialOfferings
 {
@@ -22,10 +24,32 @@ namespace CommercialOfferings
         private ArrivalWorker _arrivalWorker = null;
         private DepartureWorker _departureWorker = null;
 
+        private Task<List<Mission>> _missionTask = null;
+
+        public void OnAwake()
+        {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
+            // We start this in Awake so that it gets as much time to run as
+            // possible.
+            var directory = Mission.MissionsDirectory;
+            _missionTask = Task.Run(() => Mission.LoadMissionsFrom(directory));
+        }
+
         public void OnUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight) { return; }
             if (_nextLogicTime == 0 || _nextLogicTime > Planetarium.GetUniversalTime()) { return; }
+
+            if (_missionTask != null)
+            {
+                if (!_missionTask.IsCompleted)
+                    return;
+                var task = _missionTask;
+                _missionTask = null;
+                _missions = task.Result;
+            }
 
             HandleRoutine();
             HandleRoutineOverviewWindow();

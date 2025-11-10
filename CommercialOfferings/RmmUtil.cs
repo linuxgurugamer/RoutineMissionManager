@@ -36,9 +36,16 @@ namespace CommercialOfferings
 {
     public static class RmmUtil
     {
+        static string gamePath = null;
+
         public static string GamePath
         {
-            get { return KSPUtil.ApplicationRootPath; }
+            get
+            {
+                if (gamePath == null)
+                    gamePath = KSPUtil.ApplicationRootPath;
+                return gamePath;
+            }
         }
         public static string CommercialOfferingsPath
         {
