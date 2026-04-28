@@ -18,9 +18,11 @@ namespace CommercialOfferings
         private List<Mission> _missions = null;
         private List<RoutineArrivalMission> _routineArrivalMissions = null;
         private List<RoutineDepartureMission> _routineDepartureMissions = null;
+        private List<RoutineRetrievalMission> _routineRetrievalMissions = null;
 
         private ArrivalWorker _arrivalWorker = null;
         private DepartureWorker _departureWorker = null;
+        private RetrievalWorker _retrievalWorker = null;
 
         public void OnUpdate()
         {
@@ -33,6 +35,9 @@ namespace CommercialOfferings
 
             HandleRoutineDepartureOverviewWindow();
             HandleRoutineDepartureDetailWindow();
+
+            HandleRoutineRetrievalOverviewWindow();
+            HandleRoutineRetrievalDetailWindow();
 
             HandleCrewSelectionWindow();
             HandleDockingPortSelectionWindow();
@@ -47,8 +52,10 @@ namespace CommercialOfferings
             if (_missions == null) { _missions = Mission.LoadMissions(); }
             if (_routineArrivalMissions == null) { LoadRoutineArrivalMissions(); }
             if (_routineDepartureMissions == null) { LoadRoutineDepartureMissions(); }
+            if (_routineRetrievalMissions == null) { LoadRoutineRetrievalMissions(); }
             HandleRoutineArrivals();
             HandleRoutineDepartures();
+            HandleRoutineRetrievals();
         }
 
         private void HandleRoutineArrivals()
@@ -136,6 +143,72 @@ namespace CommercialOfferings
                 }
             }
         }
+
+        private void HandleRoutineRetrievals()
+        {
+            if (!HighLogic.LoadedSceneIsFlight) { return; }
+            if (FlightGlobals.ActiveVessel.packed || !FlightGlobals.ActiveVessel.loaded) { return; }
+
+            if (_retrievalWorker == null)
+            {
+                foreach (RoutineRetrievalMission mission in _routineRetrievalMissions)
+                {
+                    LoggerRmm.Debug("HandleRoutineRetrievals: checking mission " + mission.Name + " DepartureTime=" + mission.DepartureTime + " ArrivalTime=" + mission.ArrivalTime + " now=" + Planetarium.GetUniversalTime());
+
+                    // Phase 2: Arrival — departure already happened, waiting for vessel to return
+                    if (mission.ArrivalTime > 0 && mission.ArrivalTime < Planetarium.GetUniversalTime() &&
+                        RmmUtil.PartExistsInVessel(FlightGlobals.ActiveVessel, mission.flightIdDepartureDockPart))
+                    {
+                        LoggerRmm.Debug("  Arrival phase triggered!");
+                        if (!SkyClear(FlightGlobals.ActiveVessel))
+                        {
+                            mission.ArrivalTime += 600;
+                            mission.OrderRoutineMission();
+                            ScreenMessages.PostScreenMessage("mission " + mission.Name + " delayed-LOCAL TRAFFIC", 4, ScreenMessageStyle.UPPER_CENTER);
+                            continue;
+                        }
+                        _retrievalWorker = new RetrievalWorker();
+                        _retrievalWorker.StartRetrievalArrival(mission, FlightGlobals.ActiveVessel);
+                        return;
+                    }
+
+                    // Phase 1: Departure — vessel still docked, ready to depart
+                    if (mission.DepartureTime < Planetarium.GetUniversalTime() && mission.ArrivalTime == 0 &&
+                        RmmUtil.PartExistsInVessel(FlightGlobals.ActiveVessel, mission.flightIdDepartureDockPart) &&
+                        mission.Allowed(FlightGlobals.ActiveVessel).CheckSuccess)
+                    {
+                        if (!SkyClear(FlightGlobals.ActiveVessel))
+                        {
+                            mission.DepartureTime += 600;
+                            ScreenMessages.PostScreenMessage("mission " + mission.Name + " delayed-LOCAL TRAFFIC", 4, ScreenMessageStyle.UPPER_CENTER);
+                            continue;
+                        }
+                        _retrievalWorker = new RetrievalWorker();
+                        _retrievalWorker.StartRetrieval(mission, FlightGlobals.ActiveVessel);
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                if (_retrievalWorker.CompleteRetrieval)
+                {
+                    return;
+                }
+                else
+                {
+                    // If the worker completed the arrival phase, remove the ordered mission
+                    // If it only completed departure (ArrivalTime > now), leave it for the arrival phase
+                    if (_retrievalWorker.Mission.ArrivalTime <= 0 || _retrievalWorker.ArrivalCompleted)
+                    {
+                        RmmScenario.Instance.SetOrderedMission(_retrievalWorker.Mission.OrderId, null, 0, null);
+                    }
+                    _routineRetrievalMissions = null;
+                    _retrievalWorker = null;
+                }
+            }
+        }
+
         #region Routine Overview
 
         private static RoutineOverviewWindow _routineOverviewWindow = null;
@@ -503,6 +576,268 @@ namespace CommercialOfferings
         #endregion Routine Detail
 
 
+        #region Routine Retrieval Overview
+
+        private static RoutineRetrievalOverviewWindow _routineRetrievalOverviewWindow = null;
+
+        private void HandleRoutineRetrievalOverviewWindow()
+        {
+            if (_routineRetrievalOverviewWindow == null) { return; }
+            if (!WindowManager.IsOpen(_routineRetrievalOverviewWindow))
+            {
+                CancelRoutineRetrievalOverview();
+                return;
+            }
+
+        }
+
+        public void CancelRoutineRetrievalOverview()
+        {
+            if (_routineRetrievalOverviewWindow != null)
+            {
+                WindowManager.Close(_routineRetrievalOverviewWindow);
+                _routineRetrievalOverviewWindow = null;
+            }
+        }
+
+        public void RoutineRetrievalOverview(IWindow parent = null)
+        {
+            _missions = Mission.LoadMissions();
+            CancelRoutineRetrievalOverview();
+            _routineRetrievalOverviewWindow = new RoutineRetrievalOverviewWindow(this);
+            WindowManager.Open(_routineRetrievalOverviewWindow, parent: parent);
+
+            RefreshRoutineRetrievalOverview();
+        }
+
+        public void RefreshRoutineRetrievalOverview()
+        {
+            if (_routineRetrievalOverviewWindow == null) { return; }
+
+            List<RoutineRetrievalMission> routineRetrievalMissions = new List<RoutineRetrievalMission>();
+            LoggerRmm.Debug("RefreshRoutineRetrievalOverview: checking " + _missions.Count + " missions");
+            foreach (Mission mission in _missions)
+            {
+                if (mission.Info == null) { LoggerRmm.Debug("  mission has null Info"); continue; }
+                if (mission.Info.Type != 30) { continue; }
+                LoggerRmm.Debug("  found Type 30 mission: " + mission.Info.Name + " id=" + mission.MissionId);
+                var locationRoutineRetrievalMission = RoutineMission.AssemblePotentialRoutineMission<RoutineRetrievalMission>(mission);
+                if (locationRoutineRetrievalMission == null) { LoggerRmm.Debug("  AssemblePotentialRoutineMission returned null (Valid failed)"); continue; }
+                LoggerRmm.Debug("  Valid passed");
+                var locationCheck = locationRoutineRetrievalMission.AllowedLocation(FlightGlobals.ActiveVessel);
+                if (!locationCheck.CheckSuccess) { LoggerRmm.Debug("  AllowedLocation failed: " + String.Join(", ", locationCheck.Messages.ToArray())); continue; }
+                LoggerRmm.Debug("  AllowedLocation passed, checking docking ports");
+                foreach (Part part in FlightGlobals.ActiveVessel.parts)
+                {
+                    string name = RmmScenario.Instance.GetRegisteredDockingPort(part.flightID);
+                    if (!String.IsNullOrEmpty(name))
+                    {
+                        LoggerRmm.Debug("    registered port: " + name + " flightID=" + part.flightID);
+                        Part dockedPart = RmmUtil.GetDockedPart(FlightGlobals.ActiveVessel, part);
+                        if (dockedPart != null)
+                        {
+                            LoggerRmm.Debug("    has docked vessel");
+                            var routineRetrievalMission = RoutineMission.AssemblePotentialRoutineMission<RoutineRetrievalMission>(mission);
+                            routineRetrievalMission.flightIdDepartureDockPart = part.flightID;
+                            var check = routineRetrievalMission.AllowedVessel(FlightGlobals.ActiveVessel);
+                            if (!check.CheckSuccess) { LoggerRmm.Debug("    AllowedVessel failed: " + String.Join(", ", check.Messages.ToArray())); continue; }
+                            LoggerRmm.Debug("    AllowedVessel passed! Adding mission.");
+                            routineRetrievalMissions.Add(routineRetrievalMission);
+                        }
+                        else
+                        {
+                            LoggerRmm.Debug("    no docked vessel on this port");
+                        }
+                    }
+                }
+            }
+            LoggerRmm.Debug("RefreshRoutineRetrievalOverview: found " + routineRetrievalMissions.Count + " valid missions");
+            _routineRetrievalOverviewWindow.RoutineRetrievalMissions = routineRetrievalMissions;
+        }
+
+        #endregion Routine Retrieval Overview
+
+        #region Routine Retrieval Detail
+
+        private static RoutineRetrievalDetailWindow _routineRetrievalDetailWindow = null;
+
+        private void HandleRoutineRetrievalDetailWindow()
+        {
+            if (_routineRetrievalDetailWindow == null) { return; }
+            if (!WindowManager.IsOpen(_routineRetrievalDetailWindow))
+            {
+                CancelRoutineRetrievalDetail();
+                return;
+            }
+
+            if (_routineRetrievalDetailWindow.DepartureParts == null || _routineRetrievalDetailWindow.RoutineRetrievalMission == null) { return; }
+
+            _routineRetrievalDetailWindow.CrewCount = RmmUtil.CrewCount(_routineRetrievalDetailWindow.DepartureParts);
+
+            List<RoutineRetrievalDetailWindow.ResourceItem> resources = new List<RoutineRetrievalDetailWindow.ResourceItem>();
+            foreach (String propellant in _routineRetrievalDetailWindow.RoutineRetrievalMission.Propellants)
+            {
+                foreach (MissionResource missionResource in _routineRetrievalDetailWindow.RoutineRetrievalMission.Resources)
+                {
+                    if (missionResource.Name == propellant)
+                    {
+                        // Calculate fuel consumed (departure - arrival) as the required amount
+                        double requiredAmount = missionResource.Amount; // fallback to departure amount
+                        var mission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
+                        if (mission != null)
+                        {
+                            double consumed = mission.GetPropellantConsumedAmount(missionResource.Name);
+                            requiredAmount = consumed;
+                        }
+
+                        RoutineRetrievalDetailWindow.ResourceItem resourceItem = new RoutineRetrievalDetailWindow.ResourceItem
+                        {
+                            Name = missionResource.Name,
+                            RequiredAmount = requiredAmount,
+                            CurrentAmount = RmmUtil.ReadResource(_routineRetrievalDetailWindow.DepartureParts, missionResource.Name),
+                        };
+                        resources.Add(resourceItem);
+                    }
+                }
+            }
+            _routineRetrievalDetailWindow.Resources = resources;
+
+            // Calculate cargo returned (non-propellant resources gained: arrival amount - departure amount)
+            List<RoutineRetrievalDetailWindow.CargoItem> cargoReturned = new List<RoutineRetrievalDetailWindow.CargoItem>();
+            var retrievalMission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
+            if (retrievalMission != null && retrievalMission.ArrivalResources != null)
+            {
+                foreach (MissionResource arrivalResource in retrievalMission.ArrivalResources)
+                {
+                    if (retrievalMission.Propellants.Contains(arrivalResource.Name)) { continue; }
+                    if (arrivalResource.Name == "ElectricCharge") { continue; }
+
+                    // Find departure amount for this resource
+                    double departureAmount = 0;
+                    foreach (MissionResource depResource in retrievalMission.Resources)
+                    {
+                        if (depResource.Name == arrivalResource.Name) { departureAmount = depResource.Amount; break; }
+                    }
+
+                    double gained = arrivalResource.Amount - departureAmount;
+                    if (gained > 0.01)
+                    {
+                        cargoReturned.Add(new RoutineRetrievalDetailWindow.CargoItem
+                        {
+                            Name = arrivalResource.Name,
+                            Amount = gained,
+                        });
+                    }
+                }
+            }
+            _routineRetrievalDetailWindow.CargoReturned = cargoReturned;
+        }
+
+        public void CancelRoutineRetrievalDetail()
+        {
+            if (_routineRetrievalDetailWindow != null)
+            {
+                WindowManager.Close(_routineRetrievalDetailWindow);
+                _routineRetrievalDetailWindow = null;
+            }
+        }
+
+        public void RoutineRetrievalDetail(string missionId, uint flightIdDepartureDockPart, IWindow parent = null)
+        {
+            CancelRoutineRetrievalDetail();
+            _routineRetrievalDetailWindow = new RoutineRetrievalDetailWindow(this);
+            WindowManager.Open(_routineRetrievalDetailWindow, parent: parent);
+
+            RoutineRetrievalMission routineRetrievalMission = null;
+            foreach (Mission mission in _missions)
+            {
+                if (mission.Info == null) { continue; }
+                if (mission.Info.Type != 30) { continue; }
+                if (mission.MissionId == missionId)
+                {
+                    routineRetrievalMission = RoutineMission.AssemblePotentialRoutineMission<RoutineRetrievalMission>(mission);
+                    routineRetrievalMission.flightIdDepartureDockPart = flightIdDepartureDockPart;
+                    if (!routineRetrievalMission.AllowedVessel(FlightGlobals.ActiveVessel).CheckSuccess) { continue; }
+                }
+            }
+            _routineRetrievalDetailWindow.RoutineRetrievalMission = routineRetrievalMission;
+            _routineRetrievalDetailWindow.DepartureParts = RmmUtil.GetDockedParts(FlightGlobals.ActiveVessel, RmmUtil.GetDockedPart(FlightGlobals.ActiveVessel, RmmUtil.GetVesselPart(FlightGlobals.ActiveVessel, flightIdDepartureDockPart)));
+        }
+
+        public void RoutineRetrievalDetail(RoutineRetrievalMission routineRetrievalMission, IWindow parent = null)
+        {
+            CancelRoutineRetrievalDetail();
+            _routineRetrievalDetailWindow = new RoutineRetrievalDetailWindow(this);
+            WindowManager.Open(_routineRetrievalDetailWindow, parent: parent);
+
+            _routineRetrievalDetailWindow.RoutineRetrievalMission = routineRetrievalMission;
+        }
+
+        public CheckList OrderRetrievalMissionAllowed()
+        {
+            var checkList = new CheckList();
+
+            checkList.Check(_routineRetrievalDetailWindow != null, "no window is open");
+            if (!checkList.CheckSuccess) { return checkList; }
+
+            checkList.Check(_routineRetrievalDetailWindow.RoutineRetrievalMission != null, "no mission selected");
+            if (!checkList.CheckSuccess) { return checkList; }
+
+            checkList.Check(_routineRetrievalDetailWindow.RoutineRetrievalMission.Allowed(FlightGlobals.ActiveVessel), "order not allowed");
+
+            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+            {
+                checkList.Check(Funding.Instance.Funds > _routineRetrievalDetailWindow.RoutineRetrievalMission.Price, "insufficient funds");
+            }
+
+            return checkList;
+        }
+
+        public void OrderRetrievalMission()
+        {
+            if (_routineRetrievalDetailWindow == null) { return; }
+
+            if (_routineRetrievalDetailWindow.RoutineRetrievalMission != null)
+            {
+                var mission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
+
+                mission.DepartureTime = Planetarium.GetUniversalTime();
+                mission.ArrivalTime = 0;
+                mission.CrewCount = mission.MinimumCrew;
+
+                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                {
+                    Funding.Instance.AddFunds(-mission.Price, TransactionReasons.VesselRollout);
+                }
+
+                mission.OrderRoutineMission();
+
+                _routineRetrievalMissions = null;
+            }
+        }
+
+        public void CancelRetrievalMission()
+        {
+            if (_routineRetrievalDetailWindow == null) { return; }
+
+            if (_routineRetrievalDetailWindow.RoutineRetrievalMission != null)
+            {
+                var mission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
+
+                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                {
+                    Funding.Instance.AddFunds(mission.Price, TransactionReasons.VesselRollout);
+                }
+
+                mission.UnorderRoutineMission();
+
+                _routineRetrievalMissions = null;
+            }
+        }
+
+        #endregion Routine Retrieval Detail
+
+
         #region Crew Selection
 
         private static CrewSelectionWindow _crewSelectionWindow = null;
@@ -628,6 +963,11 @@ namespace CommercialOfferings
             {
                 _orderedMissionsWindow.RoutineDepartureMissions = _routineDepartureMissions;
             }
+            if (_routineRetrievalMissions != null &&
+                (_orderedMissionsWindow.RoutineRetrievalMissions == null || _orderedMissionsWindow.RoutineRetrievalMissions.Count != _routineRetrievalMissions.Count))
+            {
+                _orderedMissionsWindow.RoutineRetrievalMissions = _routineRetrievalMissions;
+            }
         }
 
         public void CancelOrderedMissions()
@@ -647,6 +987,7 @@ namespace CommercialOfferings
 
             _orderedMissionsWindow.RoutineArrivalMissions = _routineArrivalMissions;
             _orderedMissionsWindow.RoutineDepartureMissions = _routineDepartureMissions;
+            _orderedMissionsWindow.RoutineRetrievalMissions = _routineRetrievalMissions;
         }
 
         public void SetOrderedMissions(uint dockingPortFlightId)
@@ -702,6 +1043,28 @@ namespace CommercialOfferings
                 RoutineDepartureMission routineDepartureMission = RoutineDepartureMission.AssembleRoutineMission<RoutineDepartureMission>(orderId, _missions);
                 if (routineDepartureMission == null) { continue; }
                 _routineDepartureMissions.Add(routineDepartureMission);
+            }
+        }
+
+        private void LoadRoutineRetrievalMissions()
+        {
+            if (_missions == null) { return; }
+
+            if (_routineRetrievalMissions == null)
+            {
+                _routineRetrievalMissions = new List<RoutineRetrievalMission>();
+            }
+            else
+            {
+                _routineRetrievalMissions.Clear();
+            }
+
+            List<string> orders = RmmScenario.Instance.GetOrdersOfType(30);
+            foreach (string orderId in orders)
+            {
+                RoutineRetrievalMission routineRetrievalMission = RoutineRetrievalMission.AssembleRoutineMission<RoutineRetrievalMission>(orderId, _missions);
+                if (routineRetrievalMission == null) { continue; }
+                _routineRetrievalMissions.Add(routineRetrievalMission);
             }
         }
 

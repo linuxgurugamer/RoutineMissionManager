@@ -15,6 +15,7 @@ namespace CommercialOfferings
 
         private bool _registrationAllowed = false;
         private bool _trackingAllowed = false;
+        private bool _retrievalTrackingAllowed = false;
 
 
         public bool _refreshedRequired = true;
@@ -76,6 +77,23 @@ namespace CommercialOfferings
                 }
             }
 
+            if (vessel.situation == Vessel.Situations.ORBITING && RmmUtil.AllowedBody(vessel.mainBody.name) && _retrievalTrackingEnabled && RmmUtil.IsDocked(vessel, part))
+            {
+                if (!_retrievalTrackingAllowed)
+                {
+                    _retrievalTrackingAllowed = true;
+                    _refreshedRequired = true;
+                }
+            }
+            else
+            {
+                if (_retrievalTrackingAllowed)
+                {
+                    _retrievalTrackingAllowed = false;
+                    _refreshedRequired = true;
+                }
+            }
+
             if (_refreshedRequired)
             {
                 RefreshModule();
@@ -105,6 +123,15 @@ namespace CommercialOfferings
             else
             {
                 Events["tracking"].guiActive = false;
+            }
+
+            if (_retrievalTrackingAllowed)
+            {
+                Events["retrievalTracking"].guiActive = true;
+            }
+            else
+            {
+                Events["retrievalTracking"].guiActive = false;
             }
 
             if (String.IsNullOrEmpty(Name))
@@ -147,6 +174,20 @@ namespace CommercialOfferings
         }
         private bool _trackingEnabled = false;
 
+        public bool RetrievalTrackingEnabled
+        {
+            get
+            {
+                return _retrievalTrackingEnabled;
+            }
+            set
+            {
+                _retrievalTrackingEnabled = value;
+                _refreshedRequired = true;
+            }
+        }
+        private bool _retrievalTrackingEnabled = false;
+
         [KSPEvent(name = "register", isDefault = false, guiActive = true, guiName = "Register Docking Port")]
         public void register()
         {
@@ -167,6 +208,12 @@ namespace CommercialOfferings
         public void tracking()
         {
             RmmMonoBehaviour.Instance.CreateDepartureTracking(part);
+        }
+
+        [KSPEvent(name = "retrievalTracking", isDefault = false, guiActive = true, guiName = "Start Retrieval Tracking")]
+        public void retrievalTracking()
+        {
+            RmmMonoBehaviour.Instance.CreateRetrievalTracking(part);
         }
 
         public void SetOnFixedUpdateCallback(Action onFixedUpdateCallback)
@@ -223,6 +270,18 @@ namespace CommercialOfferings
                 if (rmmDockingPortModule != null)
                 {
                     rmmDockingPortModule.TrackingEnabled = enable;
+                }
+            }
+        }
+
+        public static void SetEnableRetrievalTracking(Vessel vessel, bool enable)
+        {
+            foreach (Part p in vessel.parts)
+            {
+                var rmmDockingPortModule = p.Modules.OfType<RmmDockingPortModule>().FirstOrDefault();
+                if (rmmDockingPortModule != null)
+                {
+                    rmmDockingPortModule.RetrievalTrackingEnabled = enable;
                 }
             }
         }

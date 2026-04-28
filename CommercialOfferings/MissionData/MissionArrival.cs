@@ -23,5 +23,8 @@ namespace CommercialOfferings.MissionData
         [XmlArray("Parts")]
         [XmlArrayItem(typeof(MissionPart), ElementName = "Part")]
         public List<MissionPart> Parts = null;
+        [XmlArray("Resources")]
+        [XmlArrayItem(typeof(MissionResource), ElementName = "Resource")]
+        public List<MissionResource> Resources = null;
     }
 }

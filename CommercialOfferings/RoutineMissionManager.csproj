@@ -65,6 +65,8 @@
     <Compile Include="Gui\OrderedMissionsWindow.cs" />
     <Compile Include="Gui\RoutineDepartureDetailWindow.cs" />
     <Compile Include="Gui\RoutineDepartureOverviewWindow.cs" />
+    <Compile Include="Gui\RoutineRetrievalOverviewWindow.cs" />
+    <Compile Include="Gui\RoutineRetrievalDetailWindow.cs" />
     <Compile Include="Gui\RoutineDetailWindow.cs" />
     <Compile Include="Gui\RoutineOverviewWindow.cs" />
     <Compile Include="Gui\RoutineWindow.cs" />
@@ -99,6 +101,7 @@
     <Compile Include="RmmStyle.cs" />
     <Compile Include="RmmUtil.cs" />
     <Compile Include="RoutineArrivalMission.cs" />
+    <Compile Include="RoutineRetrievalMission.cs" />
     <Compile Include="RoutineControl.cs" />
     <Compile Include="RoutineDepartureMission.cs" />
     <Compile Include="RoutineMission.cs" />
@@ -112,6 +115,7 @@
     <Compile Include="Tracking.cs" />
     <Compile Include="Worker\ArrivalWorker.cs" />
     <Compile Include="Worker\DepartureWorker.cs" />
+    <Compile Include="Worker\RetrievalWorker.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AssemblyVersion.tt">

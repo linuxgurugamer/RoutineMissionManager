@@ -14,6 +14,7 @@ namespace CommercialOfferings.Gui
 
         public List<RoutineArrivalMission> RoutineArrivalMissions = null;
         public List<RoutineDepartureMission> RoutineDepartureMissions = null;
+        public List<RoutineRetrievalMission> RoutineRetrievalMissions = null;
 
         public OrderedMissionsWindow(RoutineControl routineControl) : base("Ordered Missions", new Rect(), 400)
         {
@@ -63,6 +64,22 @@ namespace CommercialOfferings.Gui
                     if (GUILayout.Button(">", RmmStyle.Instance.ButtonStyle, GUILayout.Width(20), GUILayout.Height(20)))
                     {
                         _routineControl.RoutineDepartureDetail(routineDepartureMission, this);
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+
+            if (RoutineRetrievalMissions != null)
+            {
+                foreach (RoutineRetrievalMission routineRetrievalMission in RoutineRetrievalMissions)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label(routineRetrievalMission.OrderId, RmmStyle.Instance.LabelStyle, GUILayout.Width(100));
+                    GUILayout.Label(routineRetrievalMission.Name, RmmStyle.Instance.LabelStyle, GUILayout.Width(140));
+                    GUILayout.Label(RmmUtil.TimeEtaString(routineRetrievalMission.ArrivalTime - Planetarium.GetUniversalTime()), RmmStyle.Instance.LabelStyle, GUILayout.Width(90));
+                    if (GUILayout.Button(">", RmmStyle.Instance.ButtonStyle, GUILayout.Width(20), GUILayout.Height(20)))
+                    {
+                        _routineControl.RoutineRetrievalDetail(routineRetrievalMission, this);
                     }
                     GUILayout.EndHorizontal();
                 }

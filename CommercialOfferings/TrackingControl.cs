@@ -199,7 +199,14 @@ namespace CommercialOfferings
 
             if (_startDockingPort != null)
             {
-                tracking.StartDepartMission(name, _startDockingPort);
+                if (_startTrackingWindow != null && _startTrackingWindow.Type == 30)
+                {
+                    tracking.StartRetrievalMission(name, _startDockingPort);
+                }
+                else
+                {
+                    tracking.StartDepartMission(name, _startDockingPort);
+                }
             }
 
             CancelStartTracking();
@@ -231,6 +238,14 @@ namespace CommercialOfferings
         {
             //_startTracking = true;
             _startTrackingWindow = new StartTrackingWindow(this, 20);
+            WindowManager.Open(_startTrackingWindow);
+            _startTrackingVessel = null;
+            _startDockingPort = dockingPort;
+        }
+
+        public void CreateRetrievalTracking(Part dockingPort)
+        {
+            _startTrackingWindow = new StartTrackingWindow(this, 30);
             WindowManager.Open(_startTrackingWindow);
             _startTrackingVessel = null;
             _startDockingPort = dockingPort;
@@ -287,6 +302,9 @@ namespace CommercialOfferings
                     case 20:
                         missionItem.ValidCheckList = RoutineMission.RoutineMissionValid<RoutineDepartureMission>(mission);
                         break;
+                    case 30:
+                        missionItem.ValidCheckList = RoutineMission.RoutineMissionValid<RoutineRetrievalMission>(mission);
+                        break;
                     default:
                         continue;
                 }
@@ -336,6 +354,9 @@ namespace CommercialOfferings
                     break;
                 case 20:
                     _trackingDetailWindow.ValidCheckList = RoutineMission.RoutineMissionValid<RoutineDepartureMission>(trackingMission);
+                    break;
+                case 30:
+                    _trackingDetailWindow.ValidCheckList = RoutineMission.RoutineMissionValid<RoutineRetrievalMission>(trackingMission);
                     break;
             }
         }
