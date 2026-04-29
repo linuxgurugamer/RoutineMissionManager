@@ -218,6 +218,11 @@ namespace CommercialOfferings
             _trackingControl.CreateDepartureTracking(dockingPort);
         }
 
+        public void CreateRetrievalTracking(Part dockingPort)
+        {
+            _trackingControl.CreateRetrievalTracking(dockingPort);
+        }
+
         public void RegistrationVisible()
         {
             RmmDockingPortModule.AddToVessel(FlightGlobals.ActiveVessel);
@@ -227,6 +232,12 @@ namespace CommercialOfferings
         {
             RmmDockingPortModule.AddToVessel(FlightGlobals.ActiveVessel);
             RmmDockingPortModule.SetEnableTracking(FlightGlobals.ActiveVessel, true);
+        }
+
+        public void EnableRetrievalTracking()
+        {
+            RmmDockingPortModule.AddToVessel(FlightGlobals.ActiveVessel);
+            RmmDockingPortModule.SetEnableRetrievalTracking(FlightGlobals.ActiveVessel, true);
         }
 
         public void EnableDockingPortRegistration()
@@ -335,12 +346,14 @@ namespace CommercialOfferings
             {
                 _menuWindow.RoutineArrivalEnabled = true;
                 _menuWindow.RoutineDepartureEnabled = true;
+                _menuWindow.RoutineRetrievalEnabled = true;
                 _menuWindow.RegisterDockingPortsEnabled = true;
             }
             else
             {
                 _menuWindow.RoutineArrivalEnabled = false;
                 _menuWindow.RoutineDepartureEnabled = false;
+                _menuWindow.RoutineRetrievalEnabled = false;
             }
         }
 
@@ -369,6 +382,7 @@ namespace CommercialOfferings
             if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING)
             {
                 EnableDepartureTracking();
+                EnableRetrievalTracking();
             }
         }
 
@@ -393,6 +407,15 @@ namespace CommercialOfferings
             if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING)
             {
                 _routineControl.RoutineDepartureOverview(_menuWindow);
+            }
+        }
+
+        public void RoutineRetrievalOption()
+        {
+            if (!RmmUtil.AllowedBody(FlightGlobals.ActiveVessel.mainBody.name)) { return; }
+            if (FlightGlobals.ActiveVessel.situation == Vessel.Situations.ORBITING)
+            {
+                _routineControl.RoutineRetrievalOverview(_menuWindow);
             }
         }
 

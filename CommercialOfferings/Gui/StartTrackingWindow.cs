@@ -12,6 +12,11 @@ namespace CommercialOfferings.Gui
         private TrackingControl _trackingControl = null;
         private int _type = 0;
 
+        public int Type
+        {
+            get { return _type; }
+        }
+
         private const int WINDOW_WIDTH = 300;
         private const int WINDOW_HEIGHT = 100;
 
@@ -51,7 +56,7 @@ namespace CommercialOfferings.Gui
             trackStrName = GUILayout.TextField(trackStrName, 20, RmmStyle.Instance.TextFieldStyle, GUILayout.Width(200));
             GUILayout.EndHorizontal();
 
-            if (_type != 20)
+            if (_type != 20 && _type != 30)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Vessel:", RmmStyle.Instance.LabelStyle, GUILayout.Width(100));
@@ -59,7 +64,7 @@ namespace CommercialOfferings.Gui
                 GUILayout.EndHorizontal();
             }
 
-            if (_type != 20)
+            if (_type != 20 && _type != 30)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Price:", RmmStyle.Instance.LabelStyle, GUILayout.Width(100));

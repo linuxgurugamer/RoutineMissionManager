@@ -13,6 +13,7 @@ namespace CommercialOfferings.Gui
         public bool TrackingEnabled = false;
         public bool RoutineArrivalEnabled = false;
         public bool RoutineDepartureEnabled = false;
+        public bool RoutineRetrievalEnabled = false;
         public bool RegisterDockingPortsEnabled = false;
 
 
@@ -67,6 +68,16 @@ namespace CommercialOfferings.Gui
                 if (GUILayout.Button("Order Departure", RmmStyle.Instance.ButtonStyle, GUILayout.Width(200), GUILayout.Height(22)))
                 {
                     _rmmMonoBehaviour.RoutineDepartureOption();
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            if (RoutineRetrievalEnabled)
+            {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Order Retrieval", RmmStyle.Instance.ButtonStyle, GUILayout.Width(200), GUILayout.Height(22)))
+                {
+                    _rmmMonoBehaviour.RoutineRetrievalOption();
                 }
                 GUILayout.EndHorizontal();
             }

@@ -320,8 +320,33 @@ namespace CommercialOfferings
                         }
                     }
 
+                    // check for arrival (retrieval mission)
+                    if (_mission.Info.Type == 30)
+                    {
+                        if (vessel.situation == Vessel.Situations.ORBITING && RmmUtil.AllowedBody(vessel.mainBody.name))
+                        {
+                            foreach (Part p in vessel.parts)
+                            {
+                                if (Mission.PartIsMissionPart(p, _mission.Departure.Parts))
+                                {
+                                    ModuleDockingNode dockingModule = p.Modules.OfType<ModuleDockingNode>().FirstOrDefault();
+                                    if (dockingModule != null)
+                                    {
+                                        Part dockedPart = RmmUtil.GetDockedPart(vessel, p);
+                                        if (dockedPart != null && !Mission.PartIsMissionPart(dockedPart, _mission.Departure.Parts))
+                                        {
+                                            trackArrival(p);
+                                            return;
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
                     // make snapshot of vessel
-                    if (_mission.Info.Type == 10)
+                    if (_mission.Info.Type == 10 || _mission.Info.Type == 30)
                     {
                         if (vessel.situation == Vessel.Situations.ORBITING && RmmUtil.AllowedBody(vessel.mainBody.name))
                         {
@@ -344,7 +369,7 @@ namespace CommercialOfferings
                     }
 
                     // check for landing
-                    if (_mission.Info.Type == 10 || _mission.Info.Type == 20)
+                    if (_mission.Info.Type == 10 || _mission.Info.Type == 20 || _mission.Info.Type == 30)
                     {
                         if ((vessel.situation == Vessel.Situations.LANDED || vessel.situation == Vessel.Situations.SPLASHED) && RmmUtil.HomeBody(vessel.mainBody.name))
                         {
@@ -642,6 +667,21 @@ namespace CommercialOfferings
             _partModule.nextLogicTime = Planetarium.GetUniversalTime();
         }
 
+        public void StartRetrievalMission(string name, Part dockingPort)
+        {
+            trackStrName = name;
+            _mission = Mission.NewMission(RmmUtil.Rand.Next(1000000, 9999999).ToString(), 30, trackStrName);
+            trackMissionId = _mission.MissionId;
+
+            trackPort = dockingPort.flightID;
+
+            trackingActive = false;
+            SetThisPortPrimary();
+            trackingStatus = "Departure";
+
+            _partModule.nextLogicTime = Planetarium.GetUniversalTime();
+        }
+
         private void trackLaunch()
         {
             MissionLaunch launch = new MissionLaunch
@@ -723,6 +763,12 @@ namespace CommercialOfferings
                 CrewCapacity = (int)trackCrewCapacity,
                 Parts = MissionPart.GetMissionPartList(RmmUtil.GetDockedParts(vessel, dockedPort))
             };
+
+            // For retrieval missions, also capture resources at arrival
+            if (_mission.Info.Type == 30)
+            {
+                arrival.Resources = MissionResource.GetMissionResourceList(RmmUtil.GetDockedParts(vessel, dockedPort));
+            }
 
             _mission.TrackArrival(arrival);
 
@@ -980,17 +1026,21 @@ namespace CommercialOfferings
 
         private void SetThisPortPrimary()
         {
-            foreach (Part p in vessel.parts)
+            Vessel ves = vessel ?? FlightGlobals.ActiveVessel;
+            if (ves != null)
             {
-                RMMModule rmmModule = p.Modules.OfType<RMMModule>().FirstOrDefault();
-                if (rmmModule != null && rmmModule.trackMissionId == trackMissionId)
+                foreach (Part p in ves.parts)
                 {
-                    rmmModule.trackingPrimary = false;
-                    rmmModule.PortCode = "";
+                    RMMModule rmmModule = p.Modules.OfType<RMMModule>().FirstOrDefault();
+                    if (rmmModule != null && rmmModule.trackMissionId == trackMissionId)
+                    {
+                        rmmModule.trackingPrimary = false;
+                        rmmModule.PortCode = "";
+                    }
                 }
             }
             trackingPrimary = true;
-            _partModule.PortCode = "Mission Part";
+            if (_partModule != null) { _partModule.PortCode = "Mission Part"; }
         }
 
 
