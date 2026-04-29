@@ -151,10 +151,7 @@ namespace CommercialOfferings
             return checkList;
         }
 
-        /// <summary>
-        /// Gets the amount of a propellant consumed during the tracked mission (departure amount - arrival amount).
-        /// Falls back to departure amount if arrival resources are not available.
-        /// </summary>
+        // propellant consumed during tracked mission (departure - arrival), falls back to departure amount
         public double GetPropellantConsumedAmount(string propellantName)
         {
             double departureAmount = 0;

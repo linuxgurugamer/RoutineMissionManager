@@ -204,7 +204,7 @@ namespace CommercialOfferings
         }
 
 
-        [KSPEvent(name = "tracking", isDefault = false, guiActive = true, guiName = "Start Tracking")]
+        [KSPEvent(name = "tracking", isDefault = false, guiActive = true, guiName = "Start Departure Tracking")]
         public void tracking()
         {
             RmmMonoBehaviour.Instance.CreateDepartureTracking(part);

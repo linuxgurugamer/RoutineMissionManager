@@ -153,13 +153,10 @@ namespace CommercialOfferings
             {
                 foreach (RoutineRetrievalMission mission in _routineRetrievalMissions)
                 {
-                    LoggerRmm.Debug("HandleRoutineRetrievals: checking mission " + mission.Name + " DepartureTime=" + mission.DepartureTime + " ArrivalTime=" + mission.ArrivalTime + " now=" + Planetarium.GetUniversalTime());
-
-                    // Phase 2: Arrival — departure already happened, waiting for vessel to return
+                    // arrival phase
                     if (mission.ArrivalTime > 0 && mission.ArrivalTime < Planetarium.GetUniversalTime() &&
                         RmmUtil.PartExistsInVessel(FlightGlobals.ActiveVessel, mission.flightIdDepartureDockPart))
                     {
-                        LoggerRmm.Debug("  Arrival phase triggered!");
                         if (!SkyClear(FlightGlobals.ActiveVessel))
                         {
                             mission.ArrivalTime += 600;
@@ -172,7 +169,7 @@ namespace CommercialOfferings
                         return;
                     }
 
-                    // Phase 1: Departure — vessel still docked, ready to depart
+                    // departure phase
                     if (mission.DepartureTime < Planetarium.GetUniversalTime() && mission.ArrivalTime == 0 &&
                         RmmUtil.PartExistsInVessel(FlightGlobals.ActiveVessel, mission.flightIdDepartureDockPart) &&
                         mission.Allowed(FlightGlobals.ActiveVessel).CheckSuccess)
@@ -197,8 +194,7 @@ namespace CommercialOfferings
                 }
                 else
                 {
-                    // If the worker completed the arrival phase, remove the ordered mission
-                    // If it only completed departure (ArrivalTime > now), leave it for the arrival phase
+                    // remove ordered mission only after arrival phase completes
                     if (_retrievalWorker.Mission.ArrivalTime <= 0 || _retrievalWorker.ArrivalCompleted)
                     {
                         RmmScenario.Instance.SetOrderedMission(_retrievalWorker.Mission.OrderId, null, 0, null);
@@ -615,43 +611,30 @@ namespace CommercialOfferings
             if (_routineRetrievalOverviewWindow == null) { return; }
 
             List<RoutineRetrievalMission> routineRetrievalMissions = new List<RoutineRetrievalMission>();
-            LoggerRmm.Debug("RefreshRoutineRetrievalOverview: checking " + _missions.Count + " missions");
             foreach (Mission mission in _missions)
             {
-                if (mission.Info == null) { LoggerRmm.Debug("  mission has null Info"); continue; }
+                if (mission.Info == null) { continue; }
                 if (mission.Info.Type != 30) { continue; }
-                LoggerRmm.Debug("  found Type 30 mission: " + mission.Info.Name + " id=" + mission.MissionId);
                 var locationRoutineRetrievalMission = RoutineMission.AssemblePotentialRoutineMission<RoutineRetrievalMission>(mission);
-                if (locationRoutineRetrievalMission == null) { LoggerRmm.Debug("  AssemblePotentialRoutineMission returned null (Valid failed)"); continue; }
-                LoggerRmm.Debug("  Valid passed");
-                var locationCheck = locationRoutineRetrievalMission.AllowedLocation(FlightGlobals.ActiveVessel);
-                if (!locationCheck.CheckSuccess) { LoggerRmm.Debug("  AllowedLocation failed: " + String.Join(", ", locationCheck.Messages.ToArray())); continue; }
-                LoggerRmm.Debug("  AllowedLocation passed, checking docking ports");
+                if (locationRoutineRetrievalMission == null) { continue; }
+                if (!locationRoutineRetrievalMission.AllowedLocation(FlightGlobals.ActiveVessel).CheckSuccess) { continue; }
                 foreach (Part part in FlightGlobals.ActiveVessel.parts)
                 {
                     string name = RmmScenario.Instance.GetRegisteredDockingPort(part.flightID);
                     if (!String.IsNullOrEmpty(name))
                     {
-                        LoggerRmm.Debug("    registered port: " + name + " flightID=" + part.flightID);
                         Part dockedPart = RmmUtil.GetDockedPart(FlightGlobals.ActiveVessel, part);
                         if (dockedPart != null)
                         {
-                            LoggerRmm.Debug("    has docked vessel");
                             var routineRetrievalMission = RoutineMission.AssemblePotentialRoutineMission<RoutineRetrievalMission>(mission);
                             routineRetrievalMission.flightIdDepartureDockPart = part.flightID;
                             var check = routineRetrievalMission.AllowedVessel(FlightGlobals.ActiveVessel);
-                            if (!check.CheckSuccess) { LoggerRmm.Debug("    AllowedVessel failed: " + String.Join(", ", check.Messages.ToArray())); continue; }
-                            LoggerRmm.Debug("    AllowedVessel passed! Adding mission.");
+                            if (!check.CheckSuccess) { continue; }
                             routineRetrievalMissions.Add(routineRetrievalMission);
-                        }
-                        else
-                        {
-                            LoggerRmm.Debug("    no docked vessel on this port");
                         }
                     }
                 }
             }
-            LoggerRmm.Debug("RefreshRoutineRetrievalOverview: found " + routineRetrievalMissions.Count + " valid missions");
             _routineRetrievalOverviewWindow.RoutineRetrievalMissions = routineRetrievalMissions;
         }
 
@@ -681,8 +664,7 @@ namespace CommercialOfferings
                 {
                     if (missionResource.Name == propellant)
                     {
-                        // Calculate fuel consumed (departure - arrival) as the required amount
-                        double requiredAmount = missionResource.Amount; // fallback to departure amount
+                        double requiredAmount = missionResource.Amount;
                         var mission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
                         if (mission != null)
                         {
@@ -702,7 +684,7 @@ namespace CommercialOfferings
             }
             _routineRetrievalDetailWindow.Resources = resources;
 
-            // Calculate cargo returned (non-propellant resources gained: arrival amount - departure amount)
+            // cargo returned (non-propellant resources gained during mission)
             List<RoutineRetrievalDetailWindow.CargoItem> cargoReturned = new List<RoutineRetrievalDetailWindow.CargoItem>();
             var retrievalMission = _routineRetrievalDetailWindow.RoutineRetrievalMission;
             if (retrievalMission != null && retrievalMission.ArrivalResources != null)
@@ -712,7 +694,7 @@ namespace CommercialOfferings
                     if (retrievalMission.Propellants.Contains(arrivalResource.Name)) { continue; }
                     if (arrivalResource.Name == "ElectricCharge") { continue; }
 
-                    // Find departure amount for this resource
+                    // departure amount
                     double departureAmount = 0;
                     foreach (MissionResource depResource in retrievalMission.Resources)
                     {

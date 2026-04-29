@@ -30,7 +30,7 @@ namespace CommercialOfferings.Worker
         // Departure-specific state
         private Vessel _departureVessel = null;
 
-        // Arrival-specific state (mirrors ArrivalWorker)
+        // Arrival-specific state
         private Vessel _transactionVessel = null;
         private string _tempID = "";
         private uint _missionFlightIDDockPart = 0;
@@ -179,7 +179,7 @@ namespace CommercialOfferings.Worker
         {
             RmmUtil.ToMapView();
             try { RmmContract.HandleContracts(_departureVessel, false, true); }
-            catch (Exception ex) { LoggerRmm.Debug("HandleContracts departure exception (non-fatal): " + ex.Message); }
+            catch (Exception ex) { LoggerRmm.Warning("HandleContracts departure exception (non-fatal): " + ex.Message); }
 
             // Capture crew names before unloading so the same kerbals return on arrival
             string crewNames = "";
@@ -199,12 +199,11 @@ namespace CommercialOfferings.Worker
 
             ScreenMessages.PostScreenMessage(Localizer.Format(_mission.VesselName) + " departed for retrieval", 4, ScreenMessageStyle.UPPER_CENTER);
 
-            // Schedule arrival time and persist it to the ordered mission so it survives save/load
+            // schedule arrival and persist to ordered mission
             _arrivalTime = Planetarium.GetUniversalTime() + _mission.Duration;
             _mission.ArrivalTime = _arrivalTime;
             _mission.OrderRoutineMission();
 
-            // Signal completion — RoutineControl will pick up the arrival phase later
             finishRetrieval();
         }
 
@@ -364,7 +363,7 @@ namespace CommercialOfferings.Worker
             _transactionVessel.targetObject = null;
             handleLoadCrew(_transactionVessel, _mission.CrewCount, _mission.MinimumCrew, _mission.CrewSelection);
             try { RmmContract.HandleContracts(_transactionVessel, true, false); }
-            catch (Exception ex) { LoggerRmm.Debug("HandleContracts arrival exception (non-fatal): " + ex.Message); }
+            catch (Exception ex) { LoggerRmm.Warning("HandleContracts arrival exception (non-fatal): " + ex.Message); }
             if (placePort != null && !RmmUtil.IsDocked(_vessel, _part) && checkDockingPortCompatibility(placePort, _part))
             {
                 placeVesselForDock(_transactionVessel, placePort, _vessel, _part, RmmUtil.GetDockingDistance(placePort));
