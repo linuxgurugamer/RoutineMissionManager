@@ -391,50 +391,73 @@ namespace CommercialOfferings
 
         private static string[] allowedBodies = null;
         private static string[] allowedHomeBodies = null;
+        private static string[] configBodies = null;
+        private static string[] configHomeBodies = null;
+
+        // Each list comes from the RMM_BODIES config node if it sets any
+        // values, otherwise from the home body and every body orbiting it,
+        // directly or through other bodies.
+        private static void LoadBodies()
+        {
+            if (configBodies == null)
+            {
+                List<string> bodies = new List<string>();
+                List<string> homeBodies = new List<string>();
+                foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("RMM_BODIES"))
+                {
+                    foreach (string body in node.GetValues("allowedBody")) { bodies.Add(body.Trim()); }
+                    foreach (string body in node.GetValues("homeBody")) { homeBodies.Add(body.Trim()); }
+                }
+                configBodies = bodies.ToArray();
+                configHomeBodies = homeBodies.ToArray();
+            }
+
+            if (allowedBodies != null && allowedHomeBodies != null) { return; }
+            if (configBodies.Length > 0) { allowedBodies = configBodies; }
+            if (configHomeBodies.Length > 0) { allowedHomeBodies = configHomeBodies; }
+            if (allowedBodies != null && allowedHomeBodies != null) { return; }
+
+            CelestialBody home = null;
+            if (FlightGlobals.fetch != null && FlightGlobals.Bodies != null && FlightGlobals.Bodies.Count > 0)
+            {
+                home = FlightGlobals.GetHomeBody();
+            }
+            if (home == null) { return; }
+
+            if (allowedBodies == null)
+            {
+                List<string> bodies = new List<string>();
+                AddBodyAndMoons(home, bodies);
+                allowedBodies = bodies.ToArray();
+            }
+            if (allowedHomeBodies == null) { allowedHomeBodies = new string[] { home.name }; }
+        }
+
+        private static void AddBodyAndMoons(CelestialBody body, List<string> bodies)
+        {
+            bodies.Add(body.name);
+            foreach (CelestialBody moon in body.orbitingBodies) { AddBodyAndMoons(moon, bodies); }
+        }
 
         public static bool AllowedBody(string bodyName)
         {
-            if (allowedBodies == null)
-            {
-                allowedBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "AllowedBodies.txt");
-            }
+            LoadBodies();
 
-            foreach (String allowedBody in allowedBodies)
-            {
-                if (bodyName == allowedBody.Trim()) { return (true); }
-            }
-
-            return (false);
+            return allowedBodies != null && Array.IndexOf(allowedBodies, bodyName) >= 0;
         }
 
         public static bool HomeBody(string bodyName)
         {
-            if (allowedHomeBodies == null)
-            {
-                allowedHomeBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "HomeBodies.txt");
-            }
+            LoadBodies();
 
-            foreach (String allowedHomeBody in allowedHomeBodies)
-            {
-                if (bodyName == allowedHomeBody.Trim()) { return (true); }
-            }
-
-            return (false);
+            return allowedHomeBodies != null && Array.IndexOf(allowedHomeBodies, bodyName) >= 0;
         }
 
         public static string HomeBodyName()
         {
-            if (allowedHomeBodies == null)
-            {
-                allowedHomeBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "HomeBodies.txt");
-            }
+            LoadBodies();
 
-            foreach (String allowedHomeBody in allowedHomeBodies)
-            {
-                return allowedHomeBody.Trim();
-            }
-
-            return ("Home");
+            return allowedHomeBodies != null && allowedHomeBodies.Length > 0 ? allowedHomeBodies[0] : "Home";
         }
 
         #endregion Body
