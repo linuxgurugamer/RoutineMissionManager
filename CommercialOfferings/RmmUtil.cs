@@ -392,49 +392,38 @@ namespace CommercialOfferings
         private static string[] allowedBodies = null;
         private static string[] allowedHomeBodies = null;
 
+        private static void LoadBodies()
+        {
+            List<string> bodies = new List<string>();
+            List<string> homeBodies = new List<string>();
+            foreach (ConfigNode node in GameDatabase.Instance.GetConfigNodes("RMM_BODIES"))
+            {
+                foreach (string body in node.GetValues("allowedBody")) { bodies.Add(body.Trim()); }
+                foreach (string body in node.GetValues("homeBody")) { homeBodies.Add(body.Trim()); }
+            }
+            allowedBodies = bodies.ToArray();
+            allowedHomeBodies = homeBodies.ToArray();
+        }
+
         public static bool AllowedBody(string bodyName)
         {
-            if (allowedBodies == null)
-            {
-                allowedBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "AllowedBodies.txt");
-            }
+            if (allowedBodies == null) { LoadBodies(); }
 
-            foreach (String allowedBody in allowedBodies)
-            {
-                if (bodyName == allowedBody.Trim()) { return (true); }
-            }
-
-            return (false);
+            return Array.IndexOf(allowedBodies, bodyName) >= 0;
         }
 
         public static bool HomeBody(string bodyName)
         {
-            if (allowedHomeBodies == null)
-            {
-                allowedHomeBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "HomeBodies.txt");
-            }
+            if (allowedHomeBodies == null) { LoadBodies(); }
 
-            foreach (String allowedHomeBody in allowedHomeBodies)
-            {
-                if (bodyName == allowedHomeBody.Trim()) { return (true); }
-            }
-
-            return (false);
+            return Array.IndexOf(allowedHomeBodies, bodyName) >= 0;
         }
 
         public static string HomeBodyName()
         {
-            if (allowedHomeBodies == null)
-            {
-                allowedHomeBodies = System.IO.File.ReadAllLines(RmmUtil.GamePath + RmmUtil.CommercialOfferingsPath + "HomeBodies.txt");
-            }
+            if (allowedHomeBodies == null) { LoadBodies(); }
 
-            foreach (String allowedHomeBody in allowedHomeBodies)
-            {
-                return allowedHomeBody.Trim();
-            }
-
-            return ("Home");
+            return allowedHomeBodies.Length > 0 ? allowedHomeBodies[0] : "Home";
         }
 
         #endregion Body
